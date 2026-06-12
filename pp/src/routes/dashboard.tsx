@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import type { DashboardData } from "@/lib/types";
+import { useAuthStore } from "@/lib/auth-store";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Navbar } from "@/components/Navbar";
 import { PageShell, StatusBadge, PriorityBadge, EmptyState } from "@/components/ui-bits";
@@ -19,6 +20,7 @@ export const Route = createFileRoute("/dashboard")({
 function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState("");
+  const isAdmin = useAuthStore((s) => s.user?.role === "admin");
 
   useEffect(() => {
     api
@@ -57,6 +59,8 @@ function Dashboard() {
 
   return (
     <PageShell title="Dashboard">
+
+      {/* ── Stat cards ── */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
         {cards.map((c) => (
           <div
@@ -71,6 +75,41 @@ function Dashboard() {
         ))}
       </div>
 
+      {/* ── Tasks per user (Admin only) ── */}
+      {isAdmin && data.per_user && data.per_user.length > 0 && (
+        <div className="mt-8">
+          <h2 className="mb-3 text-lg font-semibold">Tasks per member</h2>
+          <div className="overflow-hidden rounded-lg border bg-card shadow-[var(--shadow-soft)]">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-muted/40">
+                  <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Member</th>
+                  <th className="px-4 py-2.5 text-center font-medium text-muted-foreground">Total</th>
+                  <th className="px-4 py-2.5 text-center font-medium text-muted-foreground">Todo</th>
+                  <th className="px-4 py-2.5 text-center font-medium text-muted-foreground">In Progress</th>
+                  <th className="px-4 py-2.5 text-center font-medium text-muted-foreground">Done</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.per_user.map((u, i) => (
+                  <tr
+                    key={u.id}
+                    className={`border-b last:border-0 ${i % 2 === 0 ? "" : "bg-muted/20"}`}
+                  >
+                    <td className="px-4 py-2.5 font-medium">{u.name}</td>
+                    <td className="px-4 py-2.5 text-center font-semibold">{u.total}</td>
+                    <td className="px-4 py-2.5 text-center text-muted-foreground">{u.todo}</td>
+                    <td className="px-4 py-2.5 text-center text-warning-foreground">{u.in_progress}</td>
+                    <td className="px-4 py-2.5 text-center text-success">{u.done}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ── Overdue tasks ── */}
       <div className="mt-8">
         <h2 className="mb-3 text-lg font-semibold">Overdue tasks</h2>
         {data.overdue_tasks.length === 0 ? (
@@ -95,6 +134,7 @@ function Dashboard() {
           </ul>
         )}
       </div>
+
     </PageShell>
   );
 }

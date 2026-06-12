@@ -30,6 +30,15 @@ export interface Task {
   assigned_to_name?: string;
 }
 
+export interface UserTaskStat {
+  id: number;
+  name: string;
+  total: number;
+  todo: number;
+  in_progress: number;
+  done: number;
+}
+
 export interface DashboardData {
   total: number;
   todo: number;
@@ -37,4 +46,5 @@ export interface DashboardData {
   done: number;
   overdue: number;
   overdue_tasks: Task[];
+  per_user: UserTaskStat[];
 }
